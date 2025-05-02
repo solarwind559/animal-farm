@@ -1,36 +1,73 @@
-import { usePage, Link, router } from '@inertiajs/react';
-import NavBar from '../../Components/NavBar';
+import { usePage, Link, router, Head } from "@inertiajs/react";
+import NavBar from "../../Components/NavBar";
 
-export default function Farms({ auth }) {
-    const { farms, flash, errors ={} } = usePage().props; // ✅ Includes pagination metadata
+// ✅ Define TypeScript types for Farm, Flash Messages, and Pagination
+type Farm = {
+    id: number;
+    name: string;
+    email: string;
+    website?: string;
+};
 
-    // Function to handle farm deletion
-    const handleDelete = (farmId) => {
-        if (confirm('Are you sure you want to delete this farm?')) {
-            router.delete(`/farms/${farmId}`)
-                .then(() => {
-                    console.log('Farm deleted successfully');
-                })
-                .catch((error) => {
-                    console.error('Error deleting farm:', error);
-                });
+type PaginationLink = {
+    url: string | null;
+    label: string;
+    active: boolean;
+};
+
+type FarmsData = {
+    data: Farm[];
+    links: PaginationLink[];
+};
+
+type FlashMessages = {
+    success?: string;
+};
+
+type AuthProps = {
+    user?: { id: number; name: string } | null;
+};
+
+// ✅ Define Page Props for Inertia
+type PageProps = {
+    auth: AuthProps;
+    farms: FarmsData;
+    flash?: FlashMessages;
+    errors?: Record<string, string>;
+    title: string;
+};
+
+export default function Farms({ auth }: PageProps) {
+    const { farms, title, flash, errors = {} } = usePage<PageProps>().props; // ✅ Ensures proper typing
+
+    // ✅ Function to handle farm deletion
+    const handleDelete = (farmId: number) => {
+        if (confirm("Are you sure you want to delete this farm?")) {
+            router.delete(`/farms/${farmId}`);
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center p-8">
+
+            <Head title={title || "Laravel"} />
+
             <div className="w-full fixed top-0 bg-white shadow-md p-4 flex justify-center mb-10">
                 <NavBar auth={auth} />
             </div>
+
             <div className="mt-10">
                 <h2 className="text-3xl font-bold my-6 text-gray-700 mt-10">Farms List</h2>
             </div>
+
             <div className="overflow-x-auto w-full max-w-4xl">
-            {flash?.success && (
-                <div className="alert alert-success p-4 bg-green-300 text-white text-left mb-4 w-full">
-                    {flash.success}
-                </div>
-            )}
+                {flash?.success && (
+                    <div className="alert alert-success p-4 bg-green-300 text-white text-left mb-4 w-full">
+                        {flash.success}
+                    </div>
+                )}
+
+                {/* Farms Table */}
                 <table className="w-full bg-white border border-gray-300 shadow-md rounded-lg">
                     <thead className="bg-gray-200 text-gray-600 uppercase text-sm">
                         <tr>
@@ -41,19 +78,18 @@ export default function Farms({ auth }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {farms.data.map((farm) => ( // ✅ Use `farms.data` for pagination support
+                        {farms.data.map((farm) => (
                             <tr key={farm.id} className="border-b border-gray-300 hover:bg-gray-100">
                                 <td className="px-4 py-2 font-semibold">{farm.name}</td>
                                 <td className="px-4 py-2">{farm.email}</td>
                                 <td className="px-4 py-2">
-                                {farm.website ? (
-    <a href={farm.website} className="text-blue-500 hover:underline">
-        {farm.website}
-    </a>
-) : (
-    <span className="text-gray-500">No info</span>
-)}
-
+                                    {farm.website ? (
+                                        <a href={farm.website} className="text-blue-500 hover:underline">
+                                            {farm.website}
+                                        </a>
+                                    ) : (
+                                        <span className="text-gray-500">No info</span>
+                                    )}
                                 </td>
                                 <td className="px-4 py-2">
                                     <div className="flex justify-center space-x-2">
@@ -79,16 +115,16 @@ export default function Farms({ auth }) {
 
             {/* Pagination Controls */}
             <div className="mt-6 flex justify-center space-x-4">
-                {farms.links.map((link, index) => (
-                    link.url && (
+                {farms.links.map((link, index) =>
+                    link.url ? (
                         <Link
                             key={index}
                             href={link.url}
-                            className={`px-4 py-2 rounded ${link.active ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}
+                            className={`px-4 py-2 rounded ${link.active ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"}`}
                             dangerouslySetInnerHTML={{ __html: link.label }} // ✅ Fix Laravel pagination HTML labels
                         />
-                    )
-                ))}
+                    ) : null
+                )}
             </div>
         </div>
     );

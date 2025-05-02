@@ -1,89 +1,148 @@
-import { useState } from 'react';
-import { usePage } from '@inertiajs/react';
-import { router, Link } from '@inertiajs/react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { usePage, router, Link, Head } from '@inertiajs/react';
 import NavBar from "../../Components/NavBar";
 
-export default function FarmEdit({ auth }) {
-    const { farm, flash, errors = {} } = usePage().props; // Access validation errors
+// Define TypeScript types for Animal and Farm
+type Animal = {
+    id?: number;
+    type_name: string;
+    animal_number: string;
+    years?: number | "";
+};
+
+type FarmDetails = {
+    name: string;
+    website: string;
+    email: string;
+};
+
+type ValidationErrors = Record<string, string>;
+
+type FlashMessages = {
+    success?: string;
+    error?: string;
+};
+
+type AuthProps = {
+    user?: { id: number; name: string } | null;
+};
+
+// Define Page Props for the Component
+type PageProps = {
+    auth: AuthProps;
+    flash?: FlashMessages;
+    errors?: ValidationErrors;
+    farm: {
+        id: number;
+        name: string;
+        website: string;
+        email: string;
+        animals: Animal[];
+    };
+    title: string;
+};
+
+const FarmEdit: React.FC<PageProps> = ({ auth }) => {
+    const { farm, title, flash, errors = {} } = usePage<PageProps>().props;
 
     // Initialize farm details state
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FarmDetails>({
         name: farm.name,
         website: farm.website,
         email: farm.email,
     });
 
     // Initialize farm animals state
-    const [animals, setAnimals] = useState(farm.animals || []);
+    const [animals, setAnimals] = useState<Animal[]>(farm.animals || []);
 
     // State to control visibility of new animal input fields
     const [showNewAnimalFields, setShowNewAnimalFields] = useState(false);
 
+    // Initialize validation errors state
+    const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+
     // Handle farm input changes
-    const handleFarmChange = (e) => {
+    const handleFarmChange = (e: ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     // Handle animal input changes
-    const handleAnimalChange = (e, index) => {
+    const handleAnimalChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => {
         const updatedAnimals = [...animals];
         updatedAnimals[index] = { ...updatedAnimals[index], [e.target.name]: e.target.value };
         setAnimals(updatedAnimals);
     };
 
+    // Validate new animal data
+    const validateNewAnimal = () => {
+        const errors: ValidationErrors = {};
+        if (!newAnimal.type_name) errors.type_name = 'Animal type is required';
+        if (!newAnimal.animal_number) {
+            errors.animal_number = 'Animal number is required';
+        } else if (!/^\d+$/.test(newAnimal.animal_number)) {
+            errors.animal_number = 'Animal number must contain only digits';
+        } else if (animals.some(animal => animal.animal_number === newAnimal.animal_number)) {
+            errors.animal_number = 'Animal number must be unique';
+        }
+        return errors;
+    };
+
     // Handle form submission for farm details
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
 
         // Prepare animals data for submission
         const updatedAnimals = animals.map((animal) => {
-            // Only include the id if it exists
             const { id, ...animalData } = animal;
             return id ? { id, ...animalData } : animalData;
         });
 
-        router.put(`/farms/${farm.id}`, { ...formData, animals: updatedAnimals })
-            .then(() => {
-                // Reset new animal fields and hide input after successful submission
-                setNewAnimal({ type_name: "", animal_number: "", years: "" });
-                setShowNewAnimalFields(false);
-            })
-            .catch((error) => {
-                console.error("Error updating farm:", error);
-            });
+        router.put(`/farms/${farm.id}`, { ...formData, animals: updatedAnimals });
+        setNewAnimal({ type_name: "", animal_number: "", years: "" });
+        setShowNewAnimalFields(false);
     };
 
     // Handle deleting animals
-    const handleDeleteAnimal = (index) => {
+    const handleDeleteAnimal = (index: number) => {
         const animalId = animals[index]?.id;
         if (animalId) {
             router.delete(`/animals/${animalId}`);
         }
-        setAnimals(animals.filter((_, i) => i !== index)); // Remove from state
+        setAnimals(animals.filter((_, i) => i !== index));
     };
 
-    const [newAnimal, setNewAnimal] = useState({
+    const [newAnimal, setNewAnimal] = useState<Animal>({
         type_name: "",
         animal_number: "",
         years: "",
     });
 
-    const handleNewAnimalChange = (e) => {
+    const handleNewAnimalChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setNewAnimal({ ...newAnimal, [e.target.name]: e.target.value });
     };
 
     // Add a new animal entry to the list
     const handleAddAnimal = () => {
-        setAnimals([...animals, { ...newAnimal }]); // Add new animal to the list without an id
-        setNewAnimal({ type_name: "", animal_number: "", years: "" }); // Clear input after adding
-        setShowNewAnimalFields(false); // Hide input fields after adding
+        const errors = validateNewAnimal();
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+        } else {
+            setAnimals([...animals, { ...newAnimal }]);
+            setNewAnimal({ type_name: "", animal_number: "", years: "" });
+            setShowNewAnimalFields(false);
+            setValidationErrors({});
+        }
     };
 
     return (
         <div className="min-h-screen flex flex-col items-center bg-gray-100 p-8 mt-12">
+
+            <Head title={title || "Laravel"} />
+
             <div className="w-full fixed top-0 bg-white shadow-md p-4 flex justify-center">
                 <NavBar auth={auth} />
             </div>
+
             <h2 className="text-3xl font-bold text-gray-700 my-6">Edit Farm Details</h2>
 
             {flash?.success && (
@@ -118,7 +177,6 @@ export default function FarmEdit({ auth }) {
                         name="name"
                         value={formData.name}
                         onChange={handleFarmChange}
-                        required
                         className="border p-2 w-full"
                     />
 
@@ -128,7 +186,6 @@ export default function FarmEdit({ auth }) {
                         name="email"
                         value={formData.email}
                         onChange={handleFarmChange}
-                        required
                         className="border p-2 w-full"
                     />
 
@@ -138,7 +195,6 @@ export default function FarmEdit({ auth }) {
                         name="website"
                         value={formData.website}
                         onChange={handleFarmChange}
-                        required
                         className="border p-2 w-full"
                     />
                 </div>
@@ -241,11 +297,15 @@ export default function FarmEdit({ auth }) {
                                             onClick={handleAddAnimal}
                                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                                         >
-                                            Add Animal
+                                            Save
                                         </button>
                                     </div>
                                 )}
                                 <div className={`${showNewAnimalFields ? "bg-blue-100" : "bg-white-100"} px-2 pb-2 text-center`}>
+                                    <div className="min-h-[20px] text-left mb-2">
+                                        {validationErrors.type_name && <span className="text-red-500 block">{validationErrors.type_name}</span>}
+                                        {validationErrors.animal_number && <span className="text-red-500 block">{validationErrors.animal_number}</span>}
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={() => setShowNewAnimalFields(!showNewAnimalFields)}
@@ -281,4 +341,6 @@ export default function FarmEdit({ auth }) {
             </div>
         </div>
     );
-}
+};
+
+export default FarmEdit;

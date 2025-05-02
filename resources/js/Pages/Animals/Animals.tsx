@@ -1,24 +1,55 @@
-import { usePage, Link, router } from '@inertiajs/react';
-import NavBar from '../../Components/NavBar';
+import { usePage, Link, router, Head } from '@inertiajs/react';
+import NavBar from "../../Components/NavBar";
 
-export default function Animals({ auth }) {
-    const { animals, flash, errors = {} } = usePage().props; // ✅ Includes pagination metadata
+type Farm = {
+    id: number;
+    name: string;
+};
 
+type Animal = {
+    id: number;
+    type_name: string;
+    animal_number: number;
+    years?: number | null;
+    farm?: Farm;
+};
+
+type PaginationLink = {
+    url: string | null;
+    label: string;
+    active: boolean;
+};
+
+// Define TypeScript Props for the Component
+type PageProps = {
+    auth: any;
+    animals: {
+        data: Animal[];
+        links: PaginationLink[];
+    };
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    errors?: Record<string, string>;
+    title: string;
+};
+
+export default function Animals({ auth }: PageProps) {
+    const { animals, flash, title, errors = {} } = usePage<PageProps>().props; // ✅ Type-safe access to props
+    const { user } = auth;
     // Function to handle animal deletion
-    const handleDelete = (animalId) => {
+    const handleDelete = (animalId: number) => {
         if (confirm('Are you sure you want to delete this animal?')) {
-            router.delete(`/animals/${animalId}`)
-                .then(() => {
-                    console.log('Animal deleted successfully');
-                })
-                .catch((error) => {
-                    console.error('Error deleting animal:', error);
-                });
+            router.delete(`/animals/${animalId}`);
         }
     };
 
     return (
         <div className="min-h-screen flex flex-col items-center bg-gray-100 p-8">
+
+            <Head title={title || "Laravel"} />
+
             <div className="w-full fixed top-0 bg-white shadow-md p-4 flex justify-center">
                 <NavBar auth={auth} />
             </div>
@@ -27,11 +58,12 @@ export default function Animals({ auth }) {
             </div>
 
             <div className="max-w-4xl w-full">
-            {flash?.success && (
-                <div className="alert alert-success p-4 bg-green-300 text-white text-left mb-4 w-full">
-                    {flash.success}
-                </div>
-            )}
+                {flash?.success && (
+                    <div className="alert alert-success p-4 bg-green-300 text-white text-left mb-4 w-full">
+                        {flash.success}
+                    </div>
+                )}
+
                 <table className="w-full border border-gray-300 shadow-md rounded-lg bg-white">
                     <thead className="bg-gray-200 text-gray-600 uppercase text-sm">
                         <tr>
@@ -48,12 +80,12 @@ export default function Animals({ auth }) {
                                 <td className="px-4 py-4">{animal.type_name}</td>
                                 <td className="px-4 py-4 font-semibold">#{animal.animal_number}</td>
                                 <td className="px-4 py-4">
-                                {animal.years !== null ? (
-    <span className="text-gray-800">{animal.years} years</span>
-) : (
-    <span className="text-gray-500">No info</span>
-)}
-                                    </td>
+                                    {animal.years !== null ? (
+                                        <span className="text-gray-800">{animal.years} years</span>
+                                    ) : (
+                                        <span className="text-gray-500">No info</span>
+                                    )}
+                                </td>
                                 <td className="px-4 py-4">
                                     {animal.farm && (
                                         <Link href={`/farms/${animal.farm.id}`} className="text-blue-500 hover:underline">
@@ -90,7 +122,7 @@ export default function Animals({ auth }) {
                                 key={index}
                                 href={link.url}
                                 className={`px-4 py-2 rounded ${link.active ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}
-                                dangerouslySetInnerHTML={{ __html: link.label }} // Fix Laravel pagination HTML labels
+                                dangerouslySetInnerHTML={{ __html: link.label }} // ✅ Fix Laravel pagination HTML labels
                             />
                         )
                     ))}

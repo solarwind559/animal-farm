@@ -9,11 +9,15 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) =>
-        resolvePageComponent(
-            `./Pages/${name}.jsx`,
-            import.meta.glob('./Pages/**/*.jsx'),
-        ),
+    resolve: (name) => {
+        const tsxPages = import.meta.glob('./Pages/**/*.tsx');
+        const jsxPages = import.meta.glob('./Pages/**/*.jsx');
+
+        // 🔥 Check if `.tsx` version exists first, otherwise fallback to `.jsx`
+        return tsxPages[`./Pages/${name}.tsx`]
+            ? resolvePageComponent(`./Pages/${name}.tsx`, tsxPages)
+            : resolvePageComponent(`./Pages/${name}.jsx`, jsxPages);
+    },
     setup({ el, App, props }) {
         const root = createRoot(el);
 

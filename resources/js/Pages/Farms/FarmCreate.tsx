@@ -1,41 +1,74 @@
-import { useState } from 'react';
-import { usePage, router, Link } from '@inertiajs/react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { usePage, router, Link, Head } from '@inertiajs/react';
 import NavBar from "../../Components/NavBar";
 
-export default function FarmCreate({ auth }) {
-    const { flash, errors = {} } = usePage().props;
+// Define TypeScript types for Animal and Farm
+type Animal = {
+    id?: number;
+    type_name: string;
+    animal_number: string;
+    years?: number | "";
+};
+
+type FarmDetails = {
+    name: string;
+    website: string;
+    email: string;
+};
+
+type ValidationErrors = Record<string, string>;
+
+type FlashMessages = {
+    success?: string;
+    error?: string;
+};
+
+type AuthProps = {
+    user?: { id: number; name: string } | null;
+};
+
+// Define Page Props for the Component
+type PageProps = {
+    auth: AuthProps;
+    flash?: FlashMessages;
+    errors?: ValidationErrors;
+    title: string;
+};
+
+const FarmCreate: React.FC<PageProps> = ({ auth }) => {
+    const { flash, title, errors = {} } = usePage<PageProps>().props;
 
     // Initialize farm details state with empty values
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FarmDetails>({
         name: '',
         website: '',
         email: '',
     });
 
     // Initialize validation errors state
-    const [validationErrors, setValidationErrors] = useState({});
+    const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
     // Initialize farm animals state as empty
-    const [animals, setAnimals] = useState([]);
+    const [animals, setAnimals] = useState<Animal[]>([]);
 
     // State to control visibility of new animal input fields
     const [showNewAnimalFields, setShowNewAnimalFields] = useState(false);
 
     // Handle farm input changes
-    const handleFarmChange = (e) => {
+    const handleFarmChange = (e: ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     // Validate form data
     const validate = () => {
-        const errors = {};
+        const errors: ValidationErrors = {};
         if (!formData.name) errors.name = 'Farm name is required';
         if (!formData.email) errors.email = 'Email is required';
         return errors;
     };
 
     // Handle form submission for creating a new farm
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         const errors = validate();
         if (Object.keys(errors).length > 0) {
@@ -45,21 +78,27 @@ export default function FarmCreate({ auth }) {
         }
     };
 
-    const [newAnimal, setNewAnimal] = useState({
+    const [newAnimal, setNewAnimal] = useState<Animal>({
         type_name: "",
         animal_number: "",
         years: "",
     });
 
-    const handleNewAnimalChange = (e) => {
+    const handleNewAnimalChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setNewAnimal({ ...newAnimal, [e.target.name]: e.target.value });
     };
 
     // Validate new animal data
     const validateNewAnimal = () => {
-        const errors = {};
+        const errors: ValidationErrors = {};
         if (!newAnimal.type_name) errors.type_name = 'Animal type is required';
-        if (!newAnimal.animal_number) errors.animal_number = 'Animal number is required';
+        if (!newAnimal.animal_number) {
+            errors.animal_number = 'Animal number is required';
+        } else if (!/^\d+$/.test(newAnimal.animal_number)) {
+            errors.animal_number = 'Animal number must contain only digits';
+        } else if (animals.some(animal => animal.animal_number === newAnimal.animal_number)) {
+            errors.animal_number = 'Animal number must be unique';
+        }
         return errors;
     };
 
@@ -76,6 +115,11 @@ export default function FarmCreate({ auth }) {
         }
     };
 
+    // Handle deleting animals
+    const handleDeleteAnimal = (index: number) => {
+        setAnimals(animals.filter((_, i) => i !== index));
+    };
+
     // Toggle new animal fields and clear animal-related errors
     const toggleNewAnimalFields = () => {
         setShowNewAnimalFields(!showNewAnimalFields);
@@ -90,9 +134,13 @@ export default function FarmCreate({ auth }) {
 
     return (
         <div className="min-h-screen flex flex-col items-center bg-gray-100 p-8 mt-12">
+
+            <Head title={title || "Laravel"} />
+
             <div className="w-full fixed top-0 bg-white shadow-md p-4 flex justify-center">
                 <NavBar auth={auth} />
             </div>
+
             <h2 className="text-3xl font-bold text-gray-700 my-6">Create Farm</h2>
 
             {flash?.success && (
@@ -120,7 +168,7 @@ export default function FarmCreate({ auth }) {
                 <h3 className="text-xl font-bold text-gray-700 mb-6 text-center text-blue-500">Farm Details</h3>
 
                 {/* Farm Details */}
-                <div className="grid grid-cols-[150px,1fr] gap-4 items-center border-b pb-6">
+                <div className="grid grid-cols-[150px,1fr] gap-4 items-top border-b pb-6">
                     <label className="text-gray-600 font-semibold text-right">Farm Name*:</label>
                     <div className="flex-1">
                         <input
@@ -167,10 +215,46 @@ export default function FarmCreate({ auth }) {
                 <div className="border-b pb-3">
                     <h3 className="text-xl font-bold text-gray-700 mt-3 text-center text-blue-500">Farm Animals</h3>
                     <div className="space-y-2 mt-4">
-                        <div className="flex items-top justify-between">
-                            <span className="flex-1 text-gray-600 font-semibold">Type*:</span>
-                            <span className="flex-1 text-gray-600 font-semibold">Number*:</span>
-                            <span className="flex-1 text-gray-600 font-semibold">Age (optional):</span>
+                        <div className="flex items-center justify-between">
+                            <span className="flex-1 text-gray-600 font-semibold">Type:</span>
+                            <span className="flex-1 text-gray-600 font-semibold">Number:</span>
+                            <span className="flex-1 text-gray-600 font-semibold">Age:</span>
+                        </div>
+
+                        {/* Display the list of added animals in a table */}
+                        <div className="mt-4">
+                            {animals.length > 0 && (
+                                <div className="w-full">
+                                    <table className="w-full bg-white">
+                                        <thead>
+                                            <tr className="bg-gray-200 text-gray-600 text-sm leading-normal">
+                                                <th className="py-3 px-6 text-left">Type</th>
+                                                <th className="py-3 px-6 text-left">Number</th>
+                                                <th className="py-3 px-6 text-left">Age</th>
+                                                <th className="py-3 px-6 text-left">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-gray-600 text-sm font-light">
+                                            {animals.map((animal, index) => (
+                                                <tr key={index} className="border-b border-gray-200 hover:bg-gray-100">
+                                                    <td className="py-3 px-6 text-left">{animal.type_name}</td>
+                                                    <td className="py-3 px-6 text-left">#{animal.animal_number}</td>
+                                                    <td className="py-3 px-6 text-left">{animal.years ? `${animal.years} years` : 'No info'}</td>
+                                                    <td className="py-3 px-6 text-left">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteAnimal(index)}
+                                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
 
                         {/* Add a new animal */}
@@ -224,13 +308,20 @@ export default function FarmCreate({ auth }) {
                                     {validationErrors.animal_number && <span className="text-red-500 block">{validationErrors.animal_number}</span>}
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={toggleNewAnimalFields}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                >
-                                    {showNewAnimalFields ? "Cancel" : "+ Add Animal"}
-                                </button>
+                                {animals.length < 3 && (
+                                    <button
+                                        type="button"
+                                        onClick={toggleNewAnimalFields}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    >
+                                        {showNewAnimalFields ? "Cancel" : "+ Add Animal"}
+                                    </button>
+                                )}
+                                {animals.length >= 3 && (
+                                    <div className="alert alert-warning p-4 bg-orange-300 text-white text-left mb-4 max-w-2xl w-full">
+                                        Maximum number of farm animals reached.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -254,4 +345,6 @@ export default function FarmCreate({ auth }) {
             </div>
         </div>
     );
-}
+};
+
+export default FarmCreate;

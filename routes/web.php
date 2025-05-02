@@ -17,18 +17,6 @@ Route::get('/', function () {
     ]);
 });
 
-
-// Route::get('/farms', [FarmController::class, 'index']);
-// Route::get('/farms/{id}', [FarmController::class, 'show']);
-
-// Route::get('/animals', [FarmAnimalController::class, 'index']);
-// Route::get('/animals/{id}', [FarmAnimalController::class, 'show']);
-
-
-// Route::get('/dashboard', function () {
-//     return Inertia::render('Dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
 
     //DASHBOARD:
@@ -63,15 +51,5 @@ Route::post('/logout', function () {
     Auth::logout();
     return redirect('/');
 })->name('logout');
-
-
-// Route::get('/test', function () {
-//     return "Test route works!";
-// });
-
-// Route::get('/farms/create', function () {
-//     return "Farms create route works!";
-// });
-
 
 require __DIR__.'/auth.php';

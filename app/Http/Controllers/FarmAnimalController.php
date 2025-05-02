@@ -23,6 +23,7 @@ class FarmAnimalController extends Controller
                 })
                 ->with('farm')
                 ->paginate(10),
+            'title' => 'Animal List',
         ]);
     }
 
@@ -36,6 +37,7 @@ class FarmAnimalController extends Controller
 
         return Inertia::render('Animals/AnimalCreate', [
             'farms' => $farms,
+            'title' => 'Create Animal',
         ]);
     }
 
@@ -56,10 +58,10 @@ class FarmAnimalController extends Controller
         // Check if the selected farm already has 3 animals
         $farm = Farm::find($validated['farm_id']);
         if ($farm->animals()->count() >= 3) {
-            return redirect()->back()->withErrors(['farm_id' => 'This farm already has the maximum number of animals (3).']);
+            return redirect()->back()->withErrors(['farm_id' => 'This farm already has the maximum number of animals (3 animals)']);
         }
 
-        // Create the new animal
+        // Create new animal
         $animal = FarmAnimal::create([
             'user_id' => Auth::id(), // Ensure it belongs to the logged-in user
             'animal_number' => $validated['animal_number'],
@@ -81,6 +83,7 @@ class FarmAnimalController extends Controller
 
         return Inertia::render('Animals/AnimalDetail', [
             'animal' => $animal,
+            'title' => 'Animal Details',
         ]);
     }
 
@@ -89,13 +92,16 @@ class FarmAnimalController extends Controller
      */
     public function edit(string $id)
     {
-        // Find the animal and ensure it belongs to a farm owned by the authenticated user
+        // Find the animal and make sure it belongs to a farm owned by the authenticated user
         $animal = FarmAnimal::whereHas('farm', function ($query) {
             $query->where('user_id', Auth::id());
         })->findOrFail($id);
 
         return Inertia::render('Animals/AnimalEdit', [
+            'auth' => ['user' => auth()->user()],
             'animal' => $animal,
+            'farms' => Farm::all(),
+            'title' => 'Edit Animal',
         ]);
     }
 
@@ -104,31 +110,39 @@ class FarmAnimalController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // Validate the request data
+        // ✅ Validate the request data
         $validated = $request->validate([
             'animal_number' => 'required|unique:farm_animals,animal_number,' . $id,
             'type_name' => 'required|string',
-            'years' => 'nullable|integer',
+            'years' => 'nullable|integer|min:0|max:20',
+            'farm_id' => 'required|exists:farms,id',
         ]);
 
-        // Find the animal and ensure it belongs to a farm owned by the authenticated user
+        // ✅ Find the animal and ensure it belongs to a farm owned by the authenticated user
         $animal = FarmAnimal::whereHas('farm', function ($query) {
             $query->where('user_id', Auth::id());
         })->findOrFail($id);
 
-        // Update the animal with validated data
+        // ✅ Check if the new farm has reached the max limit of 3 animals
+        if ($animal->farm_id !== $validated['farm_id']) { // Only check if farm is changing
+            $newFarm = Farm::findOrFail($validated['farm_id']);
+            if ($newFarm->animals()->count() >= 3) {
+                return redirect()->back()->withErrors(['farm_id' => 'This farm already has the maximum number of animals (3).']);
+            }
+        }
+
+        // ✅ Update the animal with validated data
         $animal->update($validated);
 
         return redirect("/animals/{$animal->id}")->with('success', 'Animal updated successfully!');
     }
-
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        // Find the animal by its ID and ensure it belongs to a farm that the user owns
+        // Find the animal by its ID and make sure it belongs to a farm that the user owns
         $animal = FarmAnimal::whereHas('farm', function ($query) {
             $query->where('user_id', Auth::id());
         })->findOrFail($id);

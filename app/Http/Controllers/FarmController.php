@@ -23,6 +23,7 @@ class FarmController extends Controller
             'farms' => Farm::with('animals')
                 ->where('user_id', Auth::id()) // ✅ Only fetch farms owned by the logged-in user
                 ->paginate(10),
+            'title' => 'Farm List',
         ]);
     }
 
@@ -32,9 +33,17 @@ class FarmController extends Controller
     public function create()
     {
         //
-        return Inertia::render('Farms/FarmCreate');
-            // return "Farm create page works!";
+        // return Inertia::render('Farms/FarmCreate',
+        //     [
+        //         'title' => 'Create Farm',
+        //     ]);
 
+        $farms = Farm::where('user_id', Auth::id())->get();
+
+        return Inertia::render('Farms/FarmCreate', [
+            'farms' => $farms,
+            'title' => 'Create Farm',
+        ]);
     }
 
     /**
@@ -99,6 +108,7 @@ class FarmController extends Controller
 
         return Inertia::render('Farms/FarmDetail', [
             'farm' => $farm,
+            'title' => 'Farm Details',
         ]);
     }
 
@@ -111,6 +121,8 @@ class FarmController extends Controller
         $farm = Farm::where('user_id', Auth::id())->with('animals')->findOrFail($id); // ✅ Ensure animals are included
         return Inertia::render('Farms/FarmEdit', [
             'farm' => $farm,
+            'title' => 'Farm Edit',
+
         ]);
     }
 
