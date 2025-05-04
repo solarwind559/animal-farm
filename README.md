@@ -38,6 +38,26 @@ npm run dev
 php artisan serve
 ```
 
+
+![Screenshot](screenshots/0001.png) 
+![Screenshot](screenshots/0002.png) 
+![Screenshot](screenshots/0003.png) 
+![Screenshot](screenshots/0004.png) 
+![Screenshot](screenshots/0005.png) 
+![Screenshot](screenshots/0006.png) 
+![Screenshot](screenshots/0007.png) 
+![Screenshot](screenshots/0008.png) 
+![Screenshot](screenshots/0009.png) 
+![Screenshot](screenshots/0010.png) 
+![Screenshot](screenshots/00101.png) 
+![Screenshot](screenshots/0011.png) 
+![Screenshot](screenshots/0012.png) 
+![Screenshot](screenshots/0013.png) 
+![Screenshot](screenshots/0014.png) 
+![Screenshot](screenshots/0015.png) 
+![Screenshot](screenshots/0016.png)
+
+
 ### Checklist:
 
 * Using Laravel 12 and React create:

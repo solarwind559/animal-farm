@@ -111,8 +111,8 @@ const AnimalEdit: React.FC<PageProps> = ({ auth }) => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex items-center justify-between">
+                <form onSubmit={handleSubmit} className="">
+                    <div className="flex items-center justify-between mb-4">
                         <label className="flex-1 text-right mr-2 text-gray-600 font-semibold">Type:</label>
                         <select
                             name="type_name"
@@ -128,10 +128,8 @@ const AnimalEdit: React.FC<PageProps> = ({ auth }) => {
                             <option value="Pig">Pig</option>
                         </select>
                     </div>
-                        <div className="flex-1 min-h-[20px]">
-                        </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                         <label className="flex-1 text-right mr-2 text-gray-600 font-semibold">Number:</label>
                         <input
                             type="text"
@@ -142,14 +140,15 @@ const AnimalEdit: React.FC<PageProps> = ({ auth }) => {
                             placeholder="Animal number"
                         />
                     </div>
-                    <div className="flex items-center justify-between">
+
+                    <div className="flex">
                         <div className="flex-1"></div>
-                        <div className="flex-1 min-h-[20px] mr-2 pt-1 pb-2">
+                        <div className="flex-1">
                             {validationErrors.animal_number && <span className="text-red-500 block text-left">{validationErrors.animal_number}</span>}
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mt-2 mb-4">
                         <label className="flex-1 text-right mr-2 text-gray-600 font-semibold">Age:</label>
                         <input
                             type="number"

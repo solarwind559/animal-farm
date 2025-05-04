@@ -63,7 +63,11 @@ export default function AnimalCreate({ auth }: PageProps) {
         const errors: ValidationErrors = {};
         if (!animalDetails.farm_id) errors.farm_id = "Farm selection is required";
         if (!animalDetails.type_name) errors.type_name = "Animal type selection is required";
-        if (!animalDetails.animal_number) errors.animal_number = "Animal number is required";
+        if (!animalDetails.animal_number) {
+            errors.animal_number = "Animal number is required";
+        } else if (!Number.isInteger(Number(animalDetails.animal_number))) {
+            errors.animal_number = "Animal number must be a valid integer";
+        }
         if (animalDetails.years !== undefined && (animalDetails.years < 0 || animalDetails.years > 20)) {
             errors.years = "Age must be between 0 and 20";
         }
@@ -110,7 +114,7 @@ export default function AnimalCreate({ auth }: PageProps) {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="w-full max-w-2xl bg-white p-6 shadow-lg space-y-6">
+            <form onSubmit={handleSubmit} className="w-full max-w-2xl bg-white p-6 shadow-lg space-y-2">
 
                 {/* Farm Selection */}
                 <div className="grid grid-cols-[150px,1fr] gap-4 items-top">

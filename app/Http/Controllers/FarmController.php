@@ -21,7 +21,7 @@ class FarmController extends Controller
         //
         return Inertia::render('Farms/Farms', [
             'farms' => Farm::with('animals')
-                ->where('user_id', Auth::id()) // ✅ Only fetch farms owned by the logged-in user
+                ->where('user_id', Auth::id()) // Only fetch farms owned by the logged-in user
                 ->paginate(10),
             'title' => 'Farm List',
         ]);
@@ -33,11 +33,6 @@ class FarmController extends Controller
     public function create()
     {
         //
-        // return Inertia::render('Farms/FarmCreate',
-        //     [
-        //         'title' => 'Create Farm',
-        //     ]);
-
         $farms = Farm::where('user_id', Auth::id())->get();
 
         return Inertia::render('Farms/FarmCreate', [

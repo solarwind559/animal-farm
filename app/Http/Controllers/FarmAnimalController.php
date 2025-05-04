@@ -19,7 +19,7 @@ class FarmAnimalController extends Controller
         //
         return Inertia::render('Animals/Animals', [
             'animals' => FarmAnimal::whereHas('farm', function ($query) {
-                    $query->where('user_id', Auth::id()); // ✅ Only fetch animals from user's farms
+                    $query->where('user_id', Auth::id()); // Only fetch animals from user's farms
                 })
                 ->with('farm')
                 ->paginate(10),
@@ -58,15 +58,18 @@ class FarmAnimalController extends Controller
         // Check if the selected farm already has 3 animals
         $farm = Farm::find($validated['farm_id']);
         if ($farm->animals()->count() >= 3) {
-            return redirect()->back()->withErrors(['farm_id' => 'This farm already has the maximum number of animals (3 animals)']);
+            // return redirect()->back()->withErrors(['farm_id' => 'This farm already has the maximum number of animals (3 animals)']);
+            return redirect()->back()->withErrors(['farm_id' => 'This farm already has the maximum number of animals (3 animals)'])->withInput();
+
         }
+
 
         // Create new animal
         $animal = FarmAnimal::create([
             'user_id' => Auth::id(), // Ensure it belongs to the logged-in user
             'animal_number' => $validated['animal_number'],
             'type_name' => $validated['type_name'],
-            'years' => $validated['years'],
+            'years' => $validated['years'] ?? null,
             'farm_id' => $validated['farm_id'],
         ]);
 
@@ -110,7 +113,7 @@ class FarmAnimalController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // ✅ Validate the request data
+        // Validate the request data
         $validated = $request->validate([
             'animal_number' => 'required|unique:farm_animals,animal_number,' . $id,
             'type_name' => 'required|string',
@@ -118,12 +121,12 @@ class FarmAnimalController extends Controller
             'farm_id' => 'required|exists:farms,id',
         ]);
 
-        // ✅ Find the animal and ensure it belongs to a farm owned by the authenticated user
+        // Find the animal and ensure it belongs to a farm owned by the authenticated user
         $animal = FarmAnimal::whereHas('farm', function ($query) {
             $query->where('user_id', Auth::id());
         })->findOrFail($id);
 
-        // ✅ Check if the new farm has reached the max limit of 3 animals
+        // Check if the new farm has reached the max limit of 3 animals
         if ($animal->farm_id !== $validated['farm_id']) { // Only check if farm is changing
             $newFarm = Farm::findOrFail($validated['farm_id']);
             if ($newFarm->animals()->count() >= 3) {
@@ -131,7 +134,7 @@ class FarmAnimalController extends Controller
             }
         }
 
-        // ✅ Update the animal with validated data
+        // Update the animal with validated data
         $animal->update($validated);
 
         return redirect("/animals/{$animal->id}")->with('success', 'Animal updated successfully!');

@@ -1,5 +1,4 @@
-# Use official PHP image with Apache
-FROM php:8.2-apache
+FROM php:8.2-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -10,39 +9,23 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     git \
-    libonig-dev \
-    supervisor \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath
+    mariadb-client
 
-# Set working directory
-WORKDIR /var/www/html
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql gd
 
-# Copy Laravel app files
+# Install Node.js for frontend
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
 COPY . .
 
-# ✅ Install Composer first
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer install && npm install && npm run build
 
-# ✅ Add Composer to path (if needed)
-ENV PATH="/usr/local/bin:$PATH"
-
-# Configure Git to allow safe directories
-RUN git config --global --add safe.directory /var/www/html
-
-# Remove problematic vendor directory & clear Composer cache **AFTER** Composer is installed
-RUN rm -rf /var/www/html/vendor && composer clear-cache
-
-# Install Composer dependencies cleanly
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress
-
-# Set correct permissions for Laravel storage and cache
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
-
-# Expose port 80
-EXPOSE 80
-
-# Start Apache server
-CMD ["apache2-foreground"]
+EXPOSE 9000
+CMD ["php-fpm"]
