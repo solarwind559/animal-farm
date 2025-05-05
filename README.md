@@ -1,6 +1,10 @@
-#### Make sure you have Git and Composer installed on your computer.
+### Make sure you have Git, Composer and Docker Desktop installed on your computer.
 
 Open the terminal and navigate to the folder where you want to save this project.
+
+You can run it locally or on Docker.
+
+## Run project locally
 
 Run this command to clone the repository:
 ```
@@ -21,7 +25,7 @@ Duplicate the .env.example file in the root directory and rename it to .env
 
 Find and edit this .env file section to match your local database details:
 ```
-DB_CONNECTION=sqlite
+DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=laravel
@@ -37,7 +41,72 @@ php artisan db:seed
 npm run dev
 php artisan serve
 ```
+Follow the link to view the project in browser.
 
+## Serve with Docker
+Run this command to clone the repository:
+```
+git clone https://github.com/solarwind559/animal-farm.git
+```
+Navigate to the project directory:
+```
+cd animal-farm
+```
+Run Docker Desktop
+
+Edit the Laravel app's .env file for the database to match the details inside the docker-compose.yaml file:
+```
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=llkc_db
+DB_USERNAME=llkc_user
+DB_PASSWORD=llkc_password
+```
+
+Set the url from which you will access the app:
+
+```
+APP_URL=http://localhost:8000
+```
+
+Run:
+```
+docker-compose up -d --build
+```
+Inside the container, run:
+```
+php artisan serve --host=0.0.0.0 --port=8000
+
+docker exec -it laravel_app php artisan key:generate
+
+docker exec -it laravel_app php artisan migrate
+
+docker exec -it laravel_app php artisan db:seed
+```
+Access the app on browser:
+
+http://localhost:8000/
+
+### Access Database info for login details through MySQL
+Run:
+```
+docker exec -it db mysql -u llkc_user -p
+```
+Use password: ```llkc_password```.
+
+Inside MySQL, run:
+```
+USE llkc_db;
+SELECT email, password FROM users;
+```
+#### You can now copy the (factory made) email addresses to authenticate through the /login page.
+
+#### For all email addresses, use password = `password`
+
+Login page: http://localhost:8000/login
+
+## Screenshots
 
 ![Screenshot](screenshots/0001.png) 
 ![Screenshot](screenshots/0002.png) 
@@ -58,7 +127,7 @@ php artisan serve
 ![Screenshot](screenshots/0016.png)
 
 
-### Checklist:
+## Checklist:
 
 * Using Laravel 12 and React create:
 * Basic Auth: only logged in users are able to manage entities
@@ -75,14 +144,3 @@ php artisan serve
 * Use TypescrYipt
 * Use Docker to run project locally
 * Use automated testing
-
-
-farmedit ok
-farmdetails ok
-farmlist ok
-farmcreate ok
-
-animalcreate ok
-animallist ok
-animaledit ok
-animadetails ok

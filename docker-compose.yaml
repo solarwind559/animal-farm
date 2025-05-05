@@ -1,35 +1,38 @@
 version: '3.8'
-
 services:
   app:
     build: .
     container_name: laravel_app
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
     ports:
       - "8000:8000"
+    volumes:
+      - .:/var/www/html
     depends_on:
-      - mysql
+      - db
+    networks:
+      - laravel_network
     environment:
-      - APP_ENV=local
-      - DB_HOST=mysql
-      - DB_PORT=3306
-
-  mysql:
-    image: mysql:8
-    container_name: mysql_db
-    restart: unless-stopped
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: llkc_db
+      DB_USERNAME: llkc_user
+      DB_PASSWORD: llkc_password
+    command: php artisan serve --host=0.0.0.0 --port=8000
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: always
     environment:
-      MYSQL_DATABASE: llkc
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: llkc_db
+      MYSQL_USER: llkc_user
+      MYSQL_PASSWORD: llkc_password
     ports:
       - "3306:3306"
+    networks:
+      - laravel_network
 
-  node:
-    image: node:20
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
-    command: ["npm", "run", "dev"]
+networks:
+  laravel_network:
+    driver: bridge
