@@ -14,14 +14,14 @@ class FarmControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->artisan('migrate'); // Ensure migrations run before tests
+        $this->artisan('migrate'); // migrations run before tests
     }
 
     /** @test */
     public function creates_a_farm_with_animals_successfully()
     {
         $user = User::factory()->create();
-Auth::loginUsingId($user->id);
+        Auth::loginUsingId($user->id);
 
         $response = $this->post('/farms', [
             'name' => 'Sunny Farm',

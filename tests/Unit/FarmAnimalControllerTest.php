@@ -11,22 +11,11 @@ class FarmAnimalControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** @test */
     public function test_fetches_animals_belonging_to_authenticated_user()
     {
-        // Create a user and log them in
-        // $user = User::factory()->create();
-        // Auth::login($user);
 
-        // // Create a farm for the user
-        // $farm = Farm::factory()->create(['user_id' => $user->id]);
-
-        // // Create animals for the user's farm
-        // $userAnimals = FarmAnimal::factory()->count(3)->create(['farm_id' => $farm->id]);
-
-        // // Create an animal for another user's farm
-        // FarmAnimal::factory()->create();
     }
-
 
     /** @test */
     public function creates_an_animal_successfully()
