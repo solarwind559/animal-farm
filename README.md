@@ -76,7 +76,6 @@ docker-compose up -d --build
 ```
 Inside the container, run:
 ```
-docker exec -it laravel_app composer install --no-interaction --prefer-dist --optimize-autoloader
 
 docker exec -it laravel_app php artisan key:generate
 
