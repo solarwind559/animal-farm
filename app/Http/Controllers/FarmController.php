@@ -127,10 +127,7 @@ class FarmController extends Controller
     public function update(Request $request, string $id)
     {
         // Retrieve the farm
-        // $farm = Farm::where('user_id', Auth::id())->findOrFail($id);
-        Log::info("Updating farm with ID: $id");
         $farm = Farm::where('user_id', Auth::id())->findOrFail($id);
-        Log::info("Farm found:", ['farm' => $farm]);
 
         // Validate farm details including email
         $validatedFarm = $request->validate([

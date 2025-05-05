@@ -100,10 +100,12 @@ class FarmAnimalController extends Controller
             $query->where('user_id', Auth::id());
         })->findOrFail($id);
 
+        $farms = Farm::where('user_id', Auth::id())->get(); // ✅ Restrict farms
+
         return Inertia::render('Animals/AnimalEdit', [
             'auth' => ['user' => auth()->user()],
             'animal' => $animal,
-            'farms' => Farm::all(),
+            'farms' => $farms,
             'title' => 'Edit Animal',
         ]);
     }

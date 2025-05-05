@@ -76,13 +76,18 @@ docker-compose up -d --build
 ```
 Inside the container, run:
 ```
-php artisan serve --host=0.0.0.0 --port=8000
+docker exec -it laravel_app composer install --no-interaction --prefer-dist --optimize-autoloader
 
 docker exec -it laravel_app php artisan key:generate
 
 docker exec -it laravel_app php artisan migrate
 
 docker exec -it laravel_app php artisan db:seed
+
+docker exec -it laravel_app npm install --save-dev vite
+
+docker exec -it laravel_app npm run build
+
 ```
 Access the app on browser:
 

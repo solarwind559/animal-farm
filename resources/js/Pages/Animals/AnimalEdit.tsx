@@ -78,6 +78,7 @@ const AnimalEdit: React.FC<PageProps> = ({ auth }) => {
             router.put(`/animals/${animal.id}`, animalDetails);
         }
     };
+
     return (
         <div className="min-h-screen flex flex-col items-center bg-gray-100 p-8 mt-12">
 
